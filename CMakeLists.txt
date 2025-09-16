@@ -31,6 +31,11 @@ find_package(opengv REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(DBoW2 REQUIRED)
 find_package(KimeraRPGO REQUIRED)
+# eCAL is optional for eCAL data provider
+find_package(eCAL QUIET)
+find_package(CapnProto QUIET)
+# Try to find vns_capnp library from vns-sdk
+find_library(VNS_CAPNP_LIB vns_capnp HINTS ${CMAKE_CURRENT_SOURCE_DIR}/../vns-sdk/build/components/capnp)
 # Pangolin is optional
 find_package(Pangolin QUIET)
 
@@ -156,6 +161,35 @@ if(Pangolin_FOUND)
 else(Pangolin_FOUND)
   message(STATUS "Pangolin not found.")
 endif(Pangolin_FOUND)
+
+# eCAL and CapnProto are optional for eCAL data provider
+if(eCAL_FOUND AND CapnProto_FOUND AND VNS_CAPNP_LIB)
+  target_link_libraries(${PROJECT_NAME}
+    PUBLIC
+      eCAL::core
+      ${VNS_CAPNP_LIB}
+      CapnProto::kj
+      CapnProto::capnp
+  )
+  target_include_directories(${PROJECT_NAME}
+    PUBLIC
+      ${CMAKE_CURRENT_SOURCE_DIR}/../vns-sdk/build/generated/capnp
+  )
+  target_compile_definitions(${PROJECT_NAME} PRIVATE ECAL_FOUND=1)
+  message(STATUS "eCAL, CapnProto, and vns_capnp found - EcalDataProvider will be available")
+  message(STATUS "Using vns_capnp library: ${VNS_CAPNP_LIB}")
+else()
+  message(STATUS "eCAL, CapnProto, and/or vns_capnp not found - EcalDataProvider will not be available")
+  if(NOT eCAL_FOUND)
+    message(STATUS "  eCAL not found")
+  endif()
+  if(NOT CapnProto_FOUND)
+    message(STATUS "  CapnProto not found")
+  endif()
+  if(NOT VNS_CAPNP_LIB)
+    message(STATUS "  vns_capnp library not found")
+  endif()
+endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wno-unused-parameter -pipe)
 

@@ -1,0 +1,17 @@
+services:
+  kimera-amd64:
+    image: theseus-kimera
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+      platforms: 
+        - "linux/amd64"
+    platform: linux/amd64
+    volumes:
+      - ..:/workspace/Kimera-VIO
+      - ../../vns-sdk:/workspace/vns-sdk
+      - /home/eugene/Theseus/recordings:/recordings
+    network_mode: host
+    ipc: host
+    pid: host
+    command: sleep infinity
