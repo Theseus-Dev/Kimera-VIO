@@ -40,6 +40,10 @@ EcalDataProvider::EcalDataProvider(const Config& config)
       imu_message_count_(0),
       left_image_count_(0),
       right_image_count_(0) {
+  if(!initialize())
+  {
+    throw std::runtime_error("Failed to initialize EcalDataProvider");
+  }
 }
 
 EcalDataProvider::~EcalDataProvider() {
@@ -57,7 +61,7 @@ bool EcalDataProvider::initialize() {
   LOG(INFO) << "Initializing eCAL data provider...";
   
   // Initialize eCAL
-  if (!eCAL::Initialize(0, nullptr, "KimeraVIO")) {
+  if (eCAL::Initialize(0, nullptr, "KimeraVIO") == -1) {
     LOG(ERROR) << "Failed to initialize eCAL";
     return false;
   }
@@ -70,13 +74,7 @@ bool EcalDataProvider::initialize() {
       return false;
     }
     
-    // Register IMU callback using lambda to bind member function
-    auto imu_callback = [this](const char* topic_name, 
-                               const struct eCAL::SReceiveCallbackData* data, 
-                               const void* par) {
-      this->onImuMessage(topic_name, data, par);
-    };
-    imu_subscriber_->AddReceiveCallback(imu_callback);
+    imu_subscriber_->AddReceiveCallback(std::bind(&EcalDataProvider::onImuMessage, this, std::placeholders::_1, std::placeholders::_2));
     
     // Create left camera subscriber
     left_camera_subscriber_ = std::make_unique<eCAL::CSubscriber>(config_.left_camera_topic);
@@ -85,12 +83,7 @@ bool EcalDataProvider::initialize() {
       return false;
     }
     
-    auto left_callback = [this](const char* topic_name,
-                                const struct eCAL::SReceiveCallbackData* data,
-                                const void* par) {
-      this->onLeftImageMessage(topic_name, data, par);
-    };
-    left_camera_subscriber_->AddReceiveCallback(left_callback);
+    left_camera_subscriber_->AddReceiveCallback(std::bind(&EcalDataProvider::onLeftImageMessage, this, std::placeholders::_1, std::placeholders::_2));
 
     // Create right camera subscriber if stereo is enabled
     if (config_.enable_stereo) {
@@ -100,12 +93,7 @@ bool EcalDataProvider::initialize() {
         return false;
       }
       
-      auto right_callback = [this](const char* topic_name,
-                                   const struct eCAL::SReceiveCallbackData* data,
-                                   const void* par) {
-        this->onRightImageMessage(topic_name, data, par);
-      };
-      right_camera_subscriber_->AddReceiveCallback(right_callback);
+      right_camera_subscriber_->AddReceiveCallback(std::bind(&EcalDataProvider::onRightImageMessage, this, std::placeholders::_1, std::placeholders::_2));
     }
 
     initialized_ = true;
@@ -177,21 +165,16 @@ void EcalDataProvider::shutdown() {
 }
 
 void EcalDataProvider::onImuMessage(const char* topic_name,
-                                    const struct eCAL::SReceiveCallbackData* data,
-                                    const void* par) {
+                                    const struct eCAL::SReceiveCallbackData* data) {
   if (shutdown_.load() || !data || !data->buf || data->size == 0) {
     return;
   }
 
   try {
-    // Convert raw data to Cap'n Proto words
-    kj::ArrayPtr<const capnp::word> words(
-        reinterpret_cast<const capnp::word*>(data->buf),
-        data->size / sizeof(capnp::word));
-    
-    // Create message reader
-    capnp::FlatArrayMessageReader reader(words);
-    auto imu_msg = reader.getRoot<vkc::Imu>();
+    kj::ArrayPtr<const kj::byte> bytes(reinterpret_cast<const kj::byte*>(data->buf), data->size);
+    kj::ArrayInputStream stream(bytes);
+    capnp::InputStreamMessageReader reader(stream);
+    vkc::Imu::Reader imu_msg = reader.getRoot<vkc::Imu>();
     
     // Convert to Kimera IMU measurement
     ImuMeasurement imu_measurement = convertImuMessage(imu_msg);
@@ -213,21 +196,16 @@ void EcalDataProvider::onImuMessage(const char* topic_name,
 }
 
 void EcalDataProvider::onLeftImageMessage(const char* topic_name,
-                                          const struct eCAL::SReceiveCallbackData* data,
-                                          const void* par) {
+                                          const struct eCAL::SReceiveCallbackData* data) {
   if (shutdown_.load() || !data || !data->buf || data->size == 0) {
     return;
   }
 
   try {
-    // Convert raw data to Cap'n Proto words
-    kj::ArrayPtr<const capnp::word> words(
-        reinterpret_cast<const capnp::word*>(data->buf),
-        data->size / sizeof(capnp::word));
-    
-    // Create message reader
-    capnp::FlatArrayMessageReader reader(words);
-    auto image_msg = reader.getRoot<vkc::Image>();
+    kj::ArrayPtr<const kj::byte> bytes(reinterpret_cast<const kj::byte*>(data->buf), data->size);
+    kj::ArrayInputStream stream(bytes);
+    capnp::InputStreamMessageReader reader(stream);
+    vkc::Image::Reader image_msg = reader.getRoot<vkc::Image>();
     
     // Convert to Kimera Frame
     Frame::UniquePtr frame = convertImageMessage(image_msg, config_.left_camera_params);
@@ -248,21 +226,16 @@ void EcalDataProvider::onLeftImageMessage(const char* topic_name,
 }
 
 void EcalDataProvider::onRightImageMessage(const char* topic_name,
-                                           const struct eCAL::SReceiveCallbackData* data,
-                                           const void* par) {
+                                           const struct eCAL::SReceiveCallbackData* data) {
   if (shutdown_.load() || !data || !data->buf || data->size == 0) {
     return;
   }
 
   try {
-    // Convert raw data to Cap'n Proto words
-    kj::ArrayPtr<const capnp::word> words(
-        reinterpret_cast<const capnp::word*>(data->buf),
-        data->size / sizeof(capnp::word));
-    
-    // Create message reader
-    capnp::FlatArrayMessageReader reader(words);
-    auto image_msg = reader.getRoot<vkc::Image>();
+    kj::ArrayPtr<const kj::byte> bytes(reinterpret_cast<const kj::byte*>(data->buf), data->size);
+    kj::ArrayInputStream stream(bytes);
+    capnp::InputStreamMessageReader reader(stream);
+    vkc::Image::Reader image_msg = reader.getRoot<vkc::Image>();
     
     // Convert to Kimera Frame
     Frame::UniquePtr frame = convertImageMessage(image_msg, config_.right_camera_params);
@@ -282,7 +255,7 @@ void EcalDataProvider::onRightImageMessage(const char* topic_name,
   }
 }
 
-ImuMeasurement EcalDataProvider::convertImuMessage(const capnp::Reader<vkc::Imu>& imu_msg) {
+ImuMeasurement EcalDataProvider::convertImuMessage(const vkc::Imu::Reader& imu_msg) {
   ImuMeasurement measurement;
   
   // Extract timestamp from header
@@ -304,11 +277,10 @@ ImuMeasurement EcalDataProvider::convertImuMessage(const capnp::Reader<vkc::Imu>
   return measurement;
 }
 
-Frame::UniquePtr EcalDataProvider::convertImageMessage(const capnp::Reader<vkc::Image>& image_msg,
+Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader& image_msg,
                                                        const CameraParams& camera_params) {
   // Extract timestamp
   auto header = image_msg.getHeader();
-  Timestamp timestamp = header.getStampMonotonic();
   
   // Get image properties
   uint32_t width = image_msg.getWidth();
@@ -341,6 +313,18 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const capnp::Reader<vkc::
       cv_image.convertTo(cv_image, CV_8UC1, 1.0/256.0);
       break;
     }
+    case vkc::Image::Encoding::JPEG: {
+      std::vector<uint8_t> compressed_data(data.begin(), data.end());
+      cv_image = cv::imdecode(cv::Mat(compressed_data), cv::IMREAD_GRAYSCALE);
+      if (cv_image.empty()) {
+          LOG(ERROR) << "Failed to decode JPEG image";
+          return nullptr;
+      }
+      if (!cv_image.isContinuous()) {
+          cv_image = cv_image.clone();
+      }
+      break;
+    }
     default:
       LOG(ERROR) << "Unsupported image encoding: " << static_cast<int>(encoding);
       return nullptr;
@@ -351,9 +335,11 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const capnp::Reader<vkc::
   
   // Create Kimera Frame
   Frame::UniquePtr frame = std::make_unique<Frame>(
-      timestamp,
-      cv_image,
-      camera_params);
+    header.getSeq(),
+    header.getStampMonotonic(),
+    camera_params,
+    cv_image
+  );
   
   return frame;
 }

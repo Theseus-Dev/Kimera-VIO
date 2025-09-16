@@ -32,10 +32,10 @@ find_package(OpenCV REQUIRED)
 find_package(DBoW2 REQUIRED)
 find_package(KimeraRPGO REQUIRED)
 # eCAL is optional for eCAL data provider
-find_package(eCAL QUIET)
-find_package(CapnProto QUIET)
+find_package(eCAL REQUIRED)
+find_package(CapnProto REQUIRED)
 # Try to find vns_capnp library from vns-sdk
-find_library(VNS_CAPNP_LIB vns_capnp HINTS ${CMAKE_CURRENT_SOURCE_DIR}/../vns-sdk/build/components/capnp)
+find_library(VNS_CAPNP_LIB vns_capnp HINTS /workspace/vns-sdk/build-amd64/components/capnp REQUIRED)
 # Pangolin is optional
 find_package(Pangolin QUIET)
 
@@ -173,7 +173,7 @@ if(eCAL_FOUND AND CapnProto_FOUND AND VNS_CAPNP_LIB)
   )
   target_include_directories(${PROJECT_NAME}
     PUBLIC
-      ${CMAKE_CURRENT_SOURCE_DIR}/../vns-sdk/build/generated/capnp
+      /workspace/vns-sdk/build-amd64/generated/capnp
   )
   target_compile_definitions(${PROJECT_NAME} PRIVATE ECAL_FOUND=1)
   message(STATUS "eCAL, CapnProto, and vns_capnp found - EcalDataProvider will be available")
@@ -203,6 +203,12 @@ add_library(kimera_vio::kimera_vio ALIAS kimera_vio)
 
 add_executable(stereoVIOEuroc ./examples/KimeraVIO.cpp)
 target_link_libraries(stereoVIOEuroc PUBLIC kimera_vio::kimera_vio)
+
+# Add eCAL example if eCAL support is available
+#if(eCAL_FOUND AND CapnProto_FOUND AND VNS_CAPNP_LIB)
+  add_executable(stereoVIOEcal ./examples/KimeraVIO_eCAL.cpp)
+  target_link_libraries(stereoVIOEcal PUBLIC kimera_vio::kimera_vio)
+#endif()
 
 ############################### TESTS ##########################################
 ### Add testing

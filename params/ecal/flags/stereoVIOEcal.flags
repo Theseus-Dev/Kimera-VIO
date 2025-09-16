@@ -1,15 +1,21 @@
 #!/bin/bash
+# eCAL Data Provider Configuration Flags
 --log_output=false
 --backend_type=1
 --regular_vio_backend_modality=0
 --deterministic_random_number_generator=true
+--dataset_type=2
 
+# eCAL Topic Configuration
+--imu_topic=S1/imu
+--left_camera_topic=S1/stereo1_l
+--right_camera_topic=S1/stereo2_r
 # 2D Visualization
 --visualize_feature_predictions=false
 --visualize_feature_tracks=true
 
 # 3D Visualization
---visualize=true
+--visualize=false
 --visualize_lmk_type=false
 --visualize_mesh=true
 --visualize_mesh_2d=false
@@ -21,12 +27,12 @@
 --visualize_plane_label=false
 --visualize_semantic_mesh=false
 --visualize_mesh_in_frustum=false
-#--visualize_load_mesh_filename=/home/tonirv/datasets/euroc/V1_01_easy/mav0/pointcloud0/data.ply
+
 # Type of 3D Visualization:
 # 0: mesh 3d
 # 1: pointcloud
 # 2: none
---viz_type=1
+--viz_type=2
 --min_num_obs_for_mesher_points=3
 --extract_planes_from_the_scene=false
 
@@ -36,3 +42,7 @@
 --log_feature_tracks=false
 --log_mono_tracking_images=false
 --log_stereo_matching_images=false
+
+# eCAL specific settings
+--ecal_logging_enabled=true
+--ecal_timeout_ms=5000

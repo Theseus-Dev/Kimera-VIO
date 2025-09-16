@@ -14,9 +14,9 @@
 
 #pragma once
 
-#ifdef ECAL_FOUND
 #include <ecal/ecal.h>
-#endif
+#include "imu.capnp.h"
+#include "image.capnp.h"
 
 #include <memory>
 #include <mutex>
@@ -100,46 +100,42 @@ class EcalDataProvider : public DataProviderInterface {
    * @brief eCAL callback for IMU data
    * @param topic_name Topic name
    * @param data Received data buffer
-   * @param par User parameter (unused)
    */
   void onImuMessage(const char* topic_name, 
-                    const struct eCAL::SReceiveCallbackData* data, 
-                    const void* par);
+                    const struct eCAL::SReceiveCallbackData* data);
 
   /**
    * @brief eCAL callback for left camera data
    * @param topic_name Topic name
    * @param data Received data buffer
-   * @param par User parameter (unused)
    */
   void onLeftImageMessage(const char* topic_name,
-                          const struct eCAL::SReceiveCallbackData* data,
-                          const void* par);
+                          const struct eCAL::SReceiveCallbackData* data);
 
   /**
    * @brief eCAL callback for right camera data
    * @param topic_name Topic name
    * @param data Received data buffer
-   * @param par User parameter (unused)
    */
   void onRightImageMessage(const char* topic_name,
-                           const struct eCAL::SReceiveCallbackData* data,
-                           const void* par);
+                           const struct eCAL::SReceiveCallbackData* data);
 
   /**
    * @brief Convert Cap'n Proto IMU message to Kimera IMU measurement
-   * @param imu_msg Cap'n Proto IMU message
+   * @param data Raw message data
+   * @param size Message size
    * @return Kimera IMU measurement
    */
-  ImuMeasurement convertImuMessage(const capnp::Reader<vkc::Imu>& imu_msg);
+  ImuMeasurement convertImuMessage(const vkc::Imu::Reader&);
 
   /**
    * @brief Convert Cap'n Proto Image message to Kimera Frame
-   * @param image_msg Cap'n Proto Image message
+   * @param data Raw message data
+   * @param size Message size
    * @param camera_params Camera parameters for this frame
    * @return Kimera Frame unique pointer
    */
-  Frame::UniquePtr convertImageMessage(const capnp::Reader<vkc::Image>& image_msg,
+  Frame::UniquePtr convertImageMessage(const vkc::Image::Reader&,
                                        const CameraParams& camera_params);
 
 

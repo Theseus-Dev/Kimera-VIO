@@ -13,7 +13,7 @@ T_BS:
 
 # Camera specific definitions
 rate_hz: 20
-resolution: [640, 480]  # [width, height]
+resolution: [640, 400]  # [width, height]
 camera_model: pinhole
 intrinsics: [377.535257164, 377.209841379, 328.193371286, 240.426878936]  # [fu, fv, cu, cv]
 distortion_model: radtan
