@@ -260,7 +260,7 @@ ImuMeasurement EcalDataProvider::convertImuMessage(const vkc::Imu::Reader& imu_m
   
   // Extract timestamp from header
   auto header = imu_msg.getHeader();
-  measurement.timestamp_ = header.getStampMonotonic();
+  measurement.timestamp_ = header.getStampMonotonic()/1e9;
   
   // Convert linear acceleration (Cap'n Proto Vector3d to gtsam::Vector3)
   auto linear_acc = imu_msg.getLinearAcceleration();
@@ -336,7 +336,7 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader&
   // Create Kimera Frame
   Frame::UniquePtr frame = std::make_unique<Frame>(
     header.getSeq(),
-    header.getStampMonotonic(),
+    header.getStampMonotonic()/1e9,
     camera_params,
     cv_image
   );
