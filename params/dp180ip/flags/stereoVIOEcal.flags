@@ -4,18 +4,17 @@
 --backend_type=1
 --regular_vio_backend_modality=0
 --deterministic_random_number_generator=true
---dataset_type=2
 
 # eCAL Topic Configuration
 --imu_topic=S1/imu
 --left_camera_topic=S1/stereo1_l
 --right_camera_topic=S1/stereo2_r
 # 2D Visualization
---visualize_feature_predictions=false
+--visualize_feature_predictions=true
 --visualize_feature_tracks=true
 
 # 3D Visualization
---visualize=false
+--visualize=true
 --visualize_lmk_type=false
 --visualize_mesh=true
 --visualize_mesh_2d=false
@@ -32,7 +31,7 @@
 # 0: mesh 3d
 # 1: pointcloud
 # 2: none
---viz_type=2
+--viz_type=1
 --min_num_obs_for_mesher_points=3
 --extract_planes_from_the_scene=false
 

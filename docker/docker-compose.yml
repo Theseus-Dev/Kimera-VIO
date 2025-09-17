@@ -11,7 +11,26 @@ services:
       - ..:/workspace/Kimera-VIO
       - ../../vns-sdk:/workspace/vns-sdk
       - /home/eugene/Theseus/recordings:/recordings
+      # X11 forwarding volumes
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /home/eugene/.Xauthority:/home/user/.Xauthority:ro
+      # GPU/DRI device access
+      - /dev/dri:/dev/dri
     network_mode: host
     ipc: host
     pid: host
+    environment:
+      # Set display environment variable
+      - DISPLAY=${DISPLAY}
+      # Alternative if DISPLAY is not set: DISPLAY=:0
+      - MESA_GL_VERSION_OVERRIDE=3.3
+      - MESA_GLSL_VERSION_OVERRIDE=330
+      - NO_AT_BRIDGE=1
+    # Allow container to access X server
+    security_opt:
+      - seccomp:unconfined
+    group_add:
+      - video
+    # Run as current user to avoid permission issues
+    user: "${UID:-1000}:${GID:-1000}"
     command: sleep infinity

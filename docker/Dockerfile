@@ -68,3 +68,37 @@ RUN cd /tmp && \
     make -j$(nproc) install && \
     cd / && \
     rm -rf /tmp/Kimera-RPGO
+
+# Accept build arguments for user creation
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+ARG USERNAME=user
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    sudo \
+    # ... other dependencies
+    && rm -rf /var/lib/apt/lists/*
+
+# Create user with specified UID/GID
+RUN groupadd -g ${GROUP_ID} ${USERNAME} && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} -m -s /bin/bash ${USERNAME} && \
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+RUN apt-get update && apt-get install -y \
+    mesa-utils \
+    mesa-common-dev \
+    libgl1-mesa-dev \
+    libgl1-mesa-glx \
+    libglu1-mesa-dev \
+    libegl1-mesa \
+    libgles2-mesa \
+    libgtk-3-dev \
+    libcanberra-gtk3-module
+
+
+# Set working directory and ownership
+WORKDIR /workspace
+RUN chown -R ${USERNAME}:${USERNAME} /workspace
