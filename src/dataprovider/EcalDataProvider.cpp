@@ -1,16 +1,4 @@
-/* ----------------------------------------------------------------------------
- * Copyright 2017, Massachusetts Institute of Technology,
- * Cambridge, MA 02139
- * All Rights Reserved
- * Authors: Luca Carlone, et al. (see THANKS for the full author list)
- * See LICENSE for the license information
- * -------------------------------------------------------------------------- */
 
-/**
- * @file   EcalDataProvider.cpp
- * @brief  eCAL data provider implementation for the VIO pipeline.
- * @author Generated for Kimera-VIO eCAL integration
- */
 
 #include "kimera-vio/dataprovider/EcalDataProvider.h"
 
@@ -144,7 +132,9 @@ void EcalDataProvider::shutdown() {
   // Reset subscribers (this will automatically unsubscribe)
   imu_subscriber_.reset();
   left_camera_subscriber_.reset();
-  right_camera_subscriber_.reset();
+  if (config_.enable_stereo) {
+    right_camera_subscriber_.reset();
+  }
   
   // Finalize eCAL
   if (initialized_) {
@@ -160,8 +150,9 @@ void EcalDataProvider::shutdown() {
   
   LOG(INFO) << "eCAL data provider shutdown complete";
   LOG(INFO) << "Message counts - IMU: " << imu_message_count_.load() 
-            << ", Left: " << left_image_count_.load()
-            << ", Right: " << right_image_count_.load();
+            << ", Left: " << left_image_count_.load();
+  if (config_.enable_stereo)
+  LOG(INFO) << ", Right: " << right_image_count_.load();
 }
 
 void EcalDataProvider::onImuMessage(const char* topic_name,
@@ -260,7 +251,8 @@ ImuMeasurement EcalDataProvider::convertImuMessage(const vkc::Imu::Reader& imu_m
   
   // Extract timestamp from header
   auto header = imu_msg.getHeader();
-  measurement.timestamp_ = header.getStampMonotonic()/1e9;
+  measurement.timestamp_ = header.getStampMonotonic() + header.getClockOffset();
+
   
   // Convert linear acceleration (Cap'n Proto Vector3d to gtsam::Vector3)
   auto linear_acc = imu_msg.getLinearAcceleration();
@@ -281,6 +273,7 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader&
                                                        const CameraParams& camera_params) {
   // Extract timestamp
   auto header = image_msg.getHeader();
+  Timestamp ts = header.getStampMonotonic() + header.getClockOffset();
   
   // Get image properties
   uint32_t width = image_msg.getWidth();
@@ -336,7 +329,7 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader&
   // Create Kimera Frame
   Frame::UniquePtr frame = std::make_unique<Frame>(
     header.getSeq(),
-    header.getStampMonotonic()/1e9,
+    ts,
     camera_params,
     cv_image
   );

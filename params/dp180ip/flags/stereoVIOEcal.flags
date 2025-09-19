@@ -1,6 +1,6 @@
 #!/bin/bash
 # eCAL Data Provider Configuration Flags
---log_output=false
+--log_output=true
 --backend_type=1
 --regular_vio_backend_modality=0
 --deterministic_random_number_generator=true
@@ -36,11 +36,11 @@
 --extract_planes_from_the_scene=false
 
 # For displaying/saving Frontend images:
---visualize_frontend_images=false
---save_frontend_images=false
+--visualize_frontend_images=true
+--save_frontend_images=true
 --log_feature_tracks=false
---log_mono_tracking_images=false
---log_stereo_matching_images=false
+--log_mono_tracking_images=true
+--log_stereo_matching_images=true
 
 # eCAL specific settings
 --ecal_logging_enabled=true

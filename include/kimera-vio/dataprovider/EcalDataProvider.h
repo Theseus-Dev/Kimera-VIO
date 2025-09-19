@@ -1,16 +1,3 @@
-/* ----------------------------------------------------------------------------
- * Copyright 2017, Massachusetts Institute of Technology,
- * Cambridge, MA 02139
- * All Rights Reserved
- * Authors: Luca Carlone, et al. (see THANKS for the full author list)
- * See LICENSE for the license information
- * -------------------------------------------------------------------------- */
-
-/**
- * @file   EcalDataProvider.h
- * @brief  eCAL data provider for the VIO pipeline using Cap'n Proto serialization.
- * @author Generated for Kimera-VIO eCAL integration
- */
 
 #pragma once
 
@@ -33,11 +20,6 @@ namespace capnp {
   template<typename T> class Reader;
 }
 
-namespace vkc {
-  struct Imu;
-  struct Image;
-}
-
 namespace VIO {
 
 /**
@@ -54,7 +36,6 @@ class EcalDataProvider : public DataProviderInterface {
     std::string left_camera_topic = "/camera/left/image";
     std::string right_camera_topic = "/camera/right/image";
     bool enable_stereo = true;
-    bool enable_mono = false;
     
     // Camera parameters - these should match your camera calibration
     CameraParams left_camera_params;
