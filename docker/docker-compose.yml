@@ -23,9 +23,6 @@ services:
       # Set display environment variable
       - DISPLAY=${DISPLAY}
       # Alternative if DISPLAY is not set: DISPLAY=:0
-      - MESA_GL_VERSION_OVERRIDE=3.3
-      - MESA_GLSL_VERSION_OVERRIDE=330
-      - NO_AT_BRIDGE=1
     # Allow container to access X server
     security_opt:
       - seccomp:unconfined

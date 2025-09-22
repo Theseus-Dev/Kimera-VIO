@@ -69,28 +69,14 @@ RUN cd /tmp && \
     cd / && \
     rm -rf /tmp/Kimera-RPGO
 
-# Accept build arguments for user creation
-ARG USER_ID=1000
-ARG GROUP_ID=1000
-ARG USERNAME=user
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    sudo \
-    # ... other dependencies
-    && rm -rf /var/lib/apt/lists/*
-
-# Create user with specified UID/GID
-RUN groupadd -g ${GROUP_ID} ${USERNAME} && \
-    useradd -u ${USER_ID} -g ${GROUP_ID} -m -s /bin/bash ${USERNAME} && \
-    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt install -y \
+    libgl1-mesa-dev libwayland-dev libxkbcommon-dev wayland-protocols libegl1-mesa-dev \
+    libc++-dev libepoxy-dev libglew-dev libeigen3-dev cmake g++ ninja-build \
+    libjpeg-dev libpng-dev catch2 \
+    libavcodec-dev libavutil-dev libavformat-dev libswscale-dev libavdevice-dev \
     mesa-utils \
     mesa-common-dev \
-    libgl1-mesa-dev \
     libgl1-mesa-glx \
     libglu1-mesa-dev \
     libegl1-mesa \
@@ -98,6 +84,27 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-dev \
     libcanberra-gtk3-module
 
+# Install pangolin (visualizer)
+RUN cd /tmp && \
+    git clone --recursive https://github.com/stevenlovegrove/Pangolin.git && \
+    cd Pangolin && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    cmake --build . --target install && \
+    ldconfig && \
+    cd / && \
+    rm -rf /tmp/Pangolin
+
+# Accept build arguments for user creation
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+ARG USERNAME=user
+
+# Create user with specified UID/GID
+RUN groupadd -g ${GROUP_ID} ${USERNAME} && \
+    useradd -u ${USER_ID} -g ${GROUP_ID} -m -s /bin/bash ${USERNAME} && \
+    echo "${USERNAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers    
 
 # Set working directory and ownership
 WORKDIR /workspace

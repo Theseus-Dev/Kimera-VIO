@@ -328,7 +328,7 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader&
   
   // Create Kimera Frame
   Frame::UniquePtr frame = std::make_unique<Frame>(
-    header.getSeq(),
+    header.getSeq(), // if seq do not match between cameras, maybe use timestamp as ID
     ts,
     camera_params,
     cv_image

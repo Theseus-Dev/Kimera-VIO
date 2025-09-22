@@ -30,6 +30,11 @@
 #include "kimera-vio/utils/Statistics.h"
 #include "kimera-vio/utils/Timer.h"
 
+#include <capnp/serialize.h>
+#include <ecal/ecal.h>
+#include <kj/array.h>
+#include "odometry3d.capnp.h"
+
 DEFINE_string(
     params_folder_path,
     "../params/ecal",
@@ -41,6 +46,9 @@ DEFINE_string(left_camera_topic, "S1/stereo1_l", "eCAL topic for left camera");
 DEFINE_string(right_camera_topic, "S1/stereo2_r", "eCAL topic for right camera");
 DEFINE_bool(ecal_logging_enabled, true, "Enable eCAL message logging");
 DEFINE_int32(ecal_timeout_ms, 5000, "eCAL initialization timeout in milliseconds");
+
+
+
 
 int main(int argc, char* argv[]) {
   // Initialize Google's flags library.
@@ -120,6 +128,69 @@ int main(int argc, char* argv[]) {
       std::bind(&VIO::StereoImuPipeline::fillRightFrameQueue, stereo_pipeline.get(), std::placeholders::_1));
 
   }
+
+  auto output_pub = std::make_unique<eCAL::CPublisher>("/kimera/output_odom", "capnp:Odometry3D", "Kimera VIO output");
+  if (!output_pub->IsCreated()) {
+      LOG(FATAL) << "Failed to create eCAL publisher";
+  }
+  uint64_t seq = 0;
+
+  auto outputCallback = [&](const VIO::VioBackendModule::OutputSharedPtr& output) {
+    // TODO: Update to a message type that publishes useful state and debug info like IMU bias, tracking stats, and publish num resets, covariance
+    gtsam::Point3 pos = output->W_State_Blkf_.pose_.translation();
+    gtsam::Vector3 velocity = output->W_State_Blkf_.velocity_;
+    gtsam::Rot3 R = output->W_State_Blkf_.pose_.rotation();
+    Eigen::Quaterniond quat = R.toQuaternion();
+
+    capnp::MallocMessageBuilder message;
+    vkc::Odometry3d::Builder odometry = message.initRoot<vkc::Odometry3d>();
+
+    // Set header information
+    auto header = odometry.initHeader();
+    header.setSeq(seq++);
+    header.setStampMonotonic(output->W_State_Blkf_.timestamp_);
+
+    // Set body, reference, and velocity frames
+    // odometry.setBodyFrame("imu");
+    // odometry.setReferenceFrame("imu");
+
+    // Set position and orientation (transformed)
+    auto pose = odometry.initPose();
+    auto position = pose.initPosition();
+    position.setX(pos.x());
+    position.setY(pos.y());
+    position.setZ(pos.z());
+
+    // Convert orientation back to quaternion format for the message
+    auto orientation = pose.initOrientation();
+    orientation.setW(quat.w());
+    orientation.setX(quat.x());
+    orientation.setY(quat.y());
+    orientation.setZ(quat.z());
+
+    // Set twist (transformed)
+    auto twist = odometry.initTwist();
+    auto linear = twist.initLinear();
+    linear.setX(velocity.x());
+    linear.setY(velocity.y());
+    linear.setZ(velocity.z());
+
+    // Keep the original angular velocity
+    // auto angular = twist.initAngular();
+    // angular.setX(latest_odom_msg->twist.angular[0]);
+    // angular.setY(latest_odom_msg->twist.angular[1]);
+    // angular.setZ(latest_odom_msg->twist.angular[2]);
+
+    // odometry.setResetCounter(output->debug_info_->);
+
+
+    kj::Array<capnp::word> words = capnp::messageToFlatArray(message);
+    kj::ArrayPtr<const char> array(reinterpret_cast<const char*>(words.begin()),
+                                    words.size() * sizeof(capnp::word));
+    output_pub->Send(array.begin(), array.size());
+  };
+
+  vio_pipeline->registerBackendOutputCallback(outputCallback);
       
   // Spin dataset.
   auto tic = VIO::utils::Timer::tic();

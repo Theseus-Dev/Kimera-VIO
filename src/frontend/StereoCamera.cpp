@@ -323,7 +323,7 @@ void StereoCamera::computeRectificationParameters(
   // But that has an issue that it removes large part of the image, check:
   // https://github.com/opencv/opencv/issues/7240 for this issue with kAlpha
   // Setting to -1 to make it easy, but it should NOT be -1!
-  static constexpr int kAlpha = 0;
+  static constexpr int kAlpha = -1;
   switch (left_cam_params.distortion_model_) {
     case DistortionModel::RADTAN: {
       cv::stereoRectify(

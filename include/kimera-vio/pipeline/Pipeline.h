@@ -185,6 +185,12 @@ class Pipeline {
     }
   }
 
+  inline void registerBackendOutputCallback(
+      const VioBackendModule::OutputCallback& callback) {
+    CHECK(vio_backend_module_);
+    vio_backend_module_->registerOutputCallback(callback);
+  }
+
  protected:
   // Spin the pipeline only once.
   virtual void spinOnce(FrontendInputPacketBase::UniquePtr input);
@@ -212,11 +218,7 @@ class Pipeline {
     is_backend_ok_ = false;
   }
 
-  inline void registerBackendOutputCallback(
-      const VioBackendModule::OutputCallback& callback) {
-    CHECK(vio_backend_module_);
-    vio_backend_module_->registerOutputCallback(callback);
-  }
+  
 
   inline void registerFrontendOutputCallback(
       const typename VisionImuFrontendModule::OutputCallback& callback) {

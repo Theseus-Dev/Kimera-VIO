@@ -1,3 +1,14 @@
+# Theseus fork
+- Build the Docker image `cd docker && docker compose up --build -d`
+- `docker exec -it amd46-kimera-1 bash`
+- `cd /workspace/Kimera-VIO`
+- `mkdir build`
+- `cmake .. -DKIMERA_BUILD_TESTS=OFF`
+- `make -j $(nproc)`
+- Run the KimeraVIO_eCAL.cpp example with `./stereoVIOEcal --params_folder_path ../params/dp180ip/ --flagfile ../params/dp180ip/flags/stereoVIOEcal.flags`
+- Play your eCAL recording back/run live with camera connected
+
+
 <div align="center">
   <a href="http://mit.edu/sparklab/">
     <img align="left" src="docs/media/sparklab_logo.png" width="80" alt="sparklab">

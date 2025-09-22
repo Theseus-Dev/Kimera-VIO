@@ -1,7 +1,6 @@
 #!/bin/bash
 # eCAL Data Provider Configuration Flags
 --log_output=true
---backend_type=1
 --regular_vio_backend_modality=0
 --deterministic_random_number_generator=true
 
@@ -31,16 +30,16 @@
 # 0: mesh 3d
 # 1: pointcloud
 # 2: none
---viz_type=1
+--viz_type=2
 --min_num_obs_for_mesher_points=3
 --extract_planes_from_the_scene=false
 
 # For displaying/saving Frontend images:
 --visualize_frontend_images=true
---save_frontend_images=true
+--save_frontend_images=false
 --log_feature_tracks=false
---log_mono_tracking_images=true
---log_stereo_matching_images=true
+--log_mono_tracking_images=false
+--log_stereo_matching_images=false
 
 # eCAL specific settings
 --ecal_logging_enabled=true
