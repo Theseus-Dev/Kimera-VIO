@@ -114,10 +114,12 @@ class EcalDataProvider : public DataProviderInterface {
    * @param data Raw message data
    * @param size Message size
    * @param camera_params Camera parameters for this frame
+   * @param resizeDim Optional resize dimensions for center crop [width, height]
    * @return Kimera Frame unique pointer
    */
   Frame::UniquePtr convertImageMessage(const vkc::Image::Reader&,
-                                       const CameraParams& camera_params);
+                                       const CameraParams& camera_params,
+                                       const std::pair<int, int>& resizeDim = {0, 0});
 
 
  private:

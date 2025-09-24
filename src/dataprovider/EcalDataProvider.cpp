@@ -200,6 +200,7 @@ void EcalDataProvider::onLeftImageMessage(const char* topic_name,
     
     // Convert to Kimera Frame
     Frame::UniquePtr frame = convertImageMessage(image_msg, config_.left_camera_params);
+    // Frame::UniquePtr frame = convertImageMessage(image_msg, config_.left_camera_params, {640,400});
     
     if (frame && left_frame_callback_) {
       left_frame_callback_(std::move(frame));
@@ -230,6 +231,7 @@ void EcalDataProvider::onRightImageMessage(const char* topic_name,
     
     // Convert to Kimera Frame
     Frame::UniquePtr frame = convertImageMessage(image_msg, config_.right_camera_params);
+    // Frame::UniquePtr frame = convertImageMessage(image_msg, config_.right_camera_params, {640,400});
     
     if (frame && right_frame_callback_) {
       right_frame_callback_(std::move(frame));
@@ -270,7 +272,8 @@ ImuMeasurement EcalDataProvider::convertImuMessage(const vkc::Imu::Reader& imu_m
 }
 
 Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader& image_msg,
-                                                       const CameraParams& camera_params) {
+                                                       const CameraParams& camera_params,
+                                                       const std::pair<int, int>& resizeDim) {
   // Extract timestamp
   auto header = image_msg.getHeader();
   Timestamp ts = header.getStampMonotonic() + header.getClockOffset();
@@ -325,10 +328,33 @@ Frame::UniquePtr EcalDataProvider::convertImageMessage(const vkc::Image::Reader&
   
   // Clone the image to ensure we own the data
   cv_image = cv_image.clone();
-  
+
+  // Apply center crop if resizeDim is specified
+  if (resizeDim.first > 0 && resizeDim.second > 0) {
+    int target_width = resizeDim.first;
+    int target_height = resizeDim.second;
+
+    // Check if cropping is necessary
+    if (cv_image.cols > target_width || cv_image.rows > target_height) {
+      // Calculate center crop coordinates
+      int x_offset = std::max(0, (cv_image.cols - target_width) / 2);
+      int y_offset = std::max(0, (cv_image.rows - target_height) / 2);
+
+      // Ensure we don't go out of bounds
+      int crop_width = std::min(target_width, cv_image.cols - x_offset);
+      int crop_height = std::min(target_height, cv_image.rows - y_offset);
+
+      // Perform center crop
+      cv::Rect crop_rect(x_offset, y_offset, crop_width, crop_height);
+      cv_image = cv_image(crop_rect);
+
+      // LOG(INFO) << "Applied center crop from " << width << "x" << height << " to " << cv_image.cols << "x" << cv_image.rows;
+    }
+  }
+
   // Create Kimera Frame
   Frame::UniquePtr frame = std::make_unique<Frame>(
-    header.getSeq(), // if seq do not match between cameras, maybe use timestamp as ID
+    ts, // if seq do not match between cameras, maybe use timestamp as ID
     ts,
     camera_params,
     cv_image

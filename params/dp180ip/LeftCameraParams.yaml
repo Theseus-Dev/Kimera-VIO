@@ -2,20 +2,20 @@
 # General sensor definitions.
 camera_id: left_cam
 
-# Sensor extrinsics wrt. the body-frame
+# Sensor extrinsics wrt. the body-frame (inverse of Kalibr output)
 T_BS:
   cols: 4
   rows: 4
-  data:  [-0.8842209506095527, -0.466981899928126, 0.009011972184613665, 0.04659786885625463,
-          -0.005674462415374476, -0.008552834518227855, -0.9999473233615858, 0.0026841744825933872,
-          0.4670343787982154, -0.8842255109197094, 0.004912724228311353, -0.03452905174707346,
+  data:  [-0.87225880, 0.00021997, 0.48904451, 0.02316379,
+           -0.48879148, -0.03255993, -0.87179283, -0.05646962,
+           0.01573149, -0.99946976, 0.02850821, 0.01056658,
            0.00000000, 0.00000000, 0.00000000, 1.00000000]
 
 # Camera specific definitions
 rate_hz: 16
 resolution: [640, 400]  # [width, height]
 camera_model: pinhole
-intrinsics: [197.64440194212165, 198.08645498772344, 313.9136561756579, 206.21493597476743] # [fu, fv, cu, cv]
+intrinsics: [197.9072322760428, 198.27277659646427, 313.85205893963257, 205.51074052305768] # [fu, fv, cu, cv]
 distortion_model: radtan
 distortion_coefficients: [0, 0, 0, 0]
 
@@ -34,5 +34,22 @@ distortion_coefficients: [0, 0, 0, 0]
 # resolution: [960, 600]  # [width, height]
 # camera_model: pinhole
 # intrinsics: [306.4628517422928, 306.78982740735927, 487.77031065607423, 287.8928593532375] # [fu, fv, cu, cv]
+# distortion_model: equidistant
+# distortion_coefficients: [0.01242969228937489, -0.023794860214946686, 0.018620152943760678, -0.0043360736315798684]
+
+# camd cropped to 640x400
+# T_BS:
+#   cols: 4
+#   rows: 4
+#   data:  [-0.99996660, 0.00297942, 0.00761095, -0.04452255,
+#            -0.00766652, -0.01910579, -0.99978807, -0.09360145,
+#            -0.00283337, -0.99981303, 0.01912799, 0.01049431,
+#            0.00000000, 0.00000000, 0.00000000, 1.00000000]
+
+# # Camera specific definitions
+# rate_hz: 16
+# resolution: [640, 400]  # [width, height]
+# camera_model: pinhole
+# intrinsics: [306.4628517422928, 306.78982740735927, 327.77031065607423, 187.8928593532375] # [fu, fv, cu, cv]
 # distortion_model: equidistant
 # distortion_coefficients: [0.01242969228937489, -0.023794860214946686, 0.018620152943760678, -0.0043360736315798684]

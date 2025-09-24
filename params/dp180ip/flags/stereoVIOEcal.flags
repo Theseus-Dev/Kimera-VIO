@@ -38,8 +38,8 @@
 --visualize_frontend_images=true
 --save_frontend_images=false
 --log_feature_tracks=false
---log_mono_tracking_images=false
---log_stereo_matching_images=false
+--log_mono_tracking_images=true
+--log_stereo_matching_images=true
 
 # eCAL specific settings
 --ecal_logging_enabled=true
