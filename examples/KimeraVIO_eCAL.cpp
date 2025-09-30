@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
 
   }
 
-  auto output_pub = std::make_unique<eCAL::CPublisher>("/kimera/output_odom", "capnp:Odometry3D", "Kimera VIO output");
+  auto output_pub = std::make_unique<eCAL::CPublisher>("kimera/vio", "capnp:Odometry3D", "Kimera VIO output");
   if (!output_pub->IsCreated()) {
       LOG(FATAL) << "Failed to create eCAL publisher";
   }

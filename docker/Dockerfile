@@ -96,6 +96,8 @@ RUN cd /tmp && \
     cd / && \
     rm -rf /tmp/Pangolin
 
+RUN apt-get install -y sudo libunwind-dev libgoogle-glog-dev
+
 # Accept build arguments for user creation
 ARG USER_ID=1000
 ARG GROUP_ID=1000

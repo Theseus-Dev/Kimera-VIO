@@ -6,7 +6,7 @@
 
 # eCAL Topic Configuration
 --imu_topic=S1/imu
---left_camera_topic=S1/stereo1_l
+--left_camera_topic=S1/camd
 --right_camera_topic=S1/stereo2_r
 # 2D Visualization
 --visualize_feature_predictions=true
